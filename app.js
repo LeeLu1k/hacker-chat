@@ -1,173 +1,74 @@
-// ================= FIREBASE =================
-const firebaseConfig = {
-  apiKey: "AIzaSyDjxMdWwuntPGRvPgcbpWk9LjFpw25xcQc",
+// ===== FIREBASE CONFIG =====
+firebase.initializeApp({
+  apiKey: "ТВОЙ_API_KEY",
   authDomain: "web-app-d7b7a.firebaseapp.com",
   databaseURL: "https://web-app-d7b7a-default-rtdb.firebaseio.com",
   projectId: "web-app-d7b7a",
-  storageBucket: "web-app-d7b7a.firebasestorage.app",
   messagingSenderId: "781762321374",
   appId: "1:781762321374:web:6fb42bae922f378bd0db4f"
-};
+});
 
-firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
+const messaging = firebase.messaging();
 
-const CHAT_PIN = "1337"; // 🔴 ПОМЕНЯЙ
-let pinUnlocked = false;
+// ===== USER =====
+const CHAT_PIN = "1337";
+let myId = localStorage.getItem("id") || Math.random().toString(36).slice(2);
+localStorage.setItem("id", myId);
 
+// ===== ELEMENTS =====
 const pinScreen = document.getElementById("pinScreen");
 const pinInput = document.getElementById("pinInput");
+const messages = document.getElementById("messages");
+const footer = document.querySelector("footer");
+const input = document.getElementById("msg");
 
-if (localStorage.getItem("pin_ok") === "true") {
-  unlockChat();
-}
-
+// ===== PIN =====
 function checkPin() {
   if (pinInput.value === CHAT_PIN) {
-    localStorage.setItem("pin_ok", "true");
-    unlockChat();
+    pinScreen.style.display = "none";
+    messages.style.display = "flex";
+    footer.style.display = "flex";
+    loadMessages();
   } else {
     alert("WRONG PIN");
   }
 }
 
-function unlockChat() {
-  pinUnlocked = true;
-  pinScreen.style.display = "none";
-}
-
-// ================= USER =================
-// username из URL (?u=neo)
-const params = new URLSearchParams(window.location.search);
-const username = params.get("u") || "admin";
-
-// локальный ID (кто ты)
-let myId = localStorage.getItem("myId");
-if (!myId) {
-  myId = Math.random().toString(36).substring(2, 10);
-  localStorage.setItem("myId", myId);
-}
-
-// ================= ELEMENTS =================
-const messagesBox = document.getElementById("messages");
-const input = document.getElementById("msg");
-const notifyBtn = document.getElementById("notifyBtn");
-
-// ================= SOUND =================
-const audio = new Audio(
-  "https://assets.mixkit.co/sfx/preview/mixkit-retro-game-notification-212.wav"
-);
-
-function playSound() {
-  audio.currentTime = 0;
-  audio.play().catch(() => {});
-}
-
-// ================= TYPE EFFECT =================
-function typeText(element, text, speed = 15) {
-  let i = 0;
-  element.textContent = "";
-
-  const interval = setInterval(() => {
-    element.textContent += text[i];
-    i++;
-    if (i >= text.length) clearInterval(interval);
-  }, speed);
-}
-
-// ================= NOTIFICATIONS =================
-let notificationsEnabled = localStorage.getItem("notify") === "true";
-updateNotifyBtn();
-
-notifyBtn.onclick = async () => {
-  if (!("Notification" in window)) {
-    alert("Уведомления не поддерживаются");
-    return;
-  }
-
-  if (Notification.permission === "granted") {
-    notificationsEnabled = !notificationsEnabled;
-    localStorage.setItem("notify", notificationsEnabled);
-    updateNotifyBtn();
-  } else if (Notification.permission !== "denied") {
-    const permission = await Notification.requestPermission();
-    if (permission === "granted") {
-      notificationsEnabled = true;
-      localStorage.setItem("notify", "true");
-      updateNotifyBtn();
-    }
-  }
-};
-
-function updateNotifyBtn() {
-  if (!notifyBtn) return;
-
-  if (notificationsEnabled) {
-    notifyBtn.textContent = "🔔 ON";
-    notifyBtn.classList.add("on");
-  } else {
-    notifyBtn.textContent = "🔕 OFF";
-    notifyBtn.classList.remove("on");
-  }
-}
-
-// ================= SEND MESSAGE =================
+// ===== SEND =====
 function send() {
-  if (!input.value.trim()) return;
-
-  db.ref("users/" + username).push({
+  if (!input.value) return;
+  db.ref("chat").push({
     text: input.value,
-    senderId: myId,
+    sender: myId,
     time: Date.now()
   });
-
   input.value = "";
 }
 
-// Enter → send
-input.addEventListener("keydown", e => {
-  if (e.key === "Enter") send();
-});
-
-// ================= RECEIVE =================
-db.ref("users/" + username)
-  .limitToLast(300)
-  .on("child_added", snap => {
-    const data = snap.val();
-
-    if (!pinUnlocked) return;
-
-    const wrapper = document.createElement("div");
-    wrapper.classList.add("msg");
-
-    const meta = document.createElement("div");
-    meta.className = "meta";
-
-    const textDiv = document.createElement("div");
-
-    if (data.senderId === myId) {
-      // МОЁ сообщение (СПРАВА)
-      wrapper.classList.add("me");
-      meta.textContent = "YOU";
-    } else {
-      // ЧУЖОЕ сообщение (СЛЕВА)
-      wrapper.classList.add("other");
-      meta.textContent = "ANON";
-      playSound();
-
-      // уведомление
-      if (notificationsEnabled && document.hidden) {
-        new Notification("Новое сообщение", {
-          body: data.text.slice(0, 80),
-          icon: "https://cdn-icons-png.flaticon.com/512/3064/3064197.png"
-        });
-      }
-    }
-
-    wrapper.appendChild(meta);
-    wrapper.appendChild(textDiv);
-    messagesBox.appendChild(wrapper);
-    messagesBox.scrollTop = messagesBox.scrollHeight;
-
-    typeText(textDiv, data.text);
+// ===== RECEIVE =====
+function loadMessages() {
+  db.ref("chat").limitToLast(200).on("child_added", snap => {
+    const m = snap.val();
+    const div = document.createElement("div");
+    div.className = "msg " + (m.sender === myId ? "me" : "other");
+    div.textContent = m.text;
+    messages.appendChild(div);
+    messages.scrollTop = messages.scrollHeight;
   });
+}
+
+// ===== PUSH =====
+document.getElementById("notifyBtn").onclick = async () => {
+  const token = await messaging.getToken({
+    vapidKey: "ТВОЙ_VAPID_KEY"
+  });
+  db.ref("tokens/" + myId).set(token);
+  alert("PUSH ENABLED");
+};
+
+messaging.onMessage(payload => {
+  new Notification(payload.notification.title, {
+    body: payload.notification.body
+  });
+});
