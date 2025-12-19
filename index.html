@@ -2,16 +2,19 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
-  <title>Anonymous Hacker Chat</title>
+  <title>Anonymous Chat</title>
+  
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- PWA -->
+  <link rel="manifest" href="./manifest.json">
+  <meta name="theme-color" content="#00ff00">
 
   <!-- Hacker font -->
   <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
 
   <style>
-    * {
-      box-sizing: border-box;
-    }
+    * { box-sizing: border-box; }
 
     body {
       margin: 0;
@@ -24,19 +27,63 @@
     }
 
     header {
-      padding: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 10px;
       border-bottom: 1px solid #00ff00;
-      text-align: center;
       font-size: 14px;
     }
 
-    header .cursor {
+    .cursor {
+      margin-left: 4px;
       animation: blink 1s infinite;
     }
 
     @keyframes blink {
       0%, 50% { opacity: 1; }
       51%, 100% { opacity: 0; }
+    }
+
+    #notifyBtn {
+      font-size: 12px;
+      padding: 4px 8px;
+      background: black;
+      color: #00ff00;
+      border: 1px solid #00ff00;
+      cursor: pointer;
+    }
+
+    #notifyBtn.on {
+      background: #003300;
+    }
+
+    #pinScreen {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      gap: 10px;
+    }
+
+    #pinScreen input {
+      background: black;
+      color: #00ff00;
+      border: 1px solid #00ff00;
+      padding: 8px;
+      font-family: inherit;
+      text-align: center;
+      width: 120px;
+    }
+
+    #pinScreen button {
+      background: black;
+      color: #00ff00;
+      border: 1px solid #00ff00;
+      padding: 6px 12px;
+      cursor: pointer;
+      font-family: inherit;
     }
 
     #messages {
@@ -80,7 +127,7 @@
       border-top: 1px solid #00ff00;
     }
 
-    input {
+    footer input {
       flex: 1;
       background: black;
       color: #00ff00;
@@ -91,7 +138,7 @@
       font-size: 14px;
     }
 
-    button {
+    footer button {
       background: black;
       color: #00ff00;
       border: 1px solid #00ff00;
@@ -100,57 +147,51 @@
       cursor: pointer;
     }
 
-    button:hover {
+    footer button:hover {
       background: #003300;
     }
 
     @media (max-width: 600px) {
-      .msg {
-        max-width: 90%;
-        font-size: 13px;
-      }
-
-      header {
-        font-size: 12px;
-      }
-    }
-    #notifyBtn {
-      font-size: 12px;
-      padding: 4px 8px;
-      background: black;
-      color: #00ff00;
-      border: 1px solid #00ff00;
-      cursor: pointer;
-    }
-
-    #notifyBtn.on {
-      background: #003300;
+      header { font-size: 12px; }
+      .msg { max-width: 90%; font-size: 13px; }
     }
   </style>
 </head>
 <body>
 
-<header style="display:flex;justify-content:space-between;align-items:center;">
+<header>
   <div>💻 ANONYMOUS CHAT<span class="cursor">█</span></div>
-  <button id="notifyBtn">🔔 OFF</button>
+  <button id="notifyBtn">🔕 OFF</button>
 </header>
 
-<div id="pinScreen" style="padding:20px;text-align:center;">
-  <p>ENTER PIN</p>
+<!-- PIN SCREEN -->
+<div id="pinScreen">
+  <div>ENTER PIN</div>
   <input id="pinInput" type="password" placeholder="****">
   <button onclick="checkPin()">OK</button>
 </div>
 
-<div id="messages"></div>
+<!-- CHAT -->
+<div id="messages" style="display:none;"></div>
 
-<footer>
-  <input id="msg" placeholder="type message..." />
+<footer style="display:none;">
+  <input id="msg" placeholder="type message..." autocomplete="off">
   <button onclick="send()">SEND</button>
 </footer>
 
+<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-<script src="app.js"></script>
+
+<!-- App -->
+<script src="./app.js"></script>
+
+<!-- Service Worker -->
+<script>
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("./sw.js");
+}
+</script>
 
 </body>
 </html>
