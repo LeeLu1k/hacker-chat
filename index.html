@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Anonymous Hacker Chat</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- Hacker font -->
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      height: 100vh;
+      background: #000;
+      color: #00ff00;
+      font-family: 'Share Tech Mono', monospace;
+      display: flex;
+      flex-direction: column;
+    }
+
+    header {
+      padding: 10px;
+      border-bottom: 1px solid #00ff00;
+      text-align: center;
+      font-size: 14px;
+    }
+
+    header .cursor {
+      animation: blink 1s infinite;
+    }
+
+    @keyframes blink {
+      0%, 50% { opacity: 1; }
+      51%, 100% { opacity: 0; }
+    }
+
+    #messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .msg {
+      max-width: 75%;
+      padding: 6px 8px;
+      border: 1px solid #00ff00;
+      word-wrap: break-word;
+      font-size: 14px;
+    }
+
+    .me {
+      align-self: flex-end;
+      text-align: right;
+      background: #003300;
+    }
+
+    .other {
+      align-self: flex-start;
+      background: #000;
+    }
+
+    .meta {
+      font-size: 10px;
+      opacity: 0.6;
+      margin-bottom: 2px;
+    }
+
+    footer {
+      display: flex;
+      gap: 6px;
+      padding: 8px;
+      border-top: 1px solid #00ff00;
+    }
+
+    input {
+      flex: 1;
+      background: black;
+      color: #00ff00;
+      border: 1px solid #00ff00;
+      padding: 8px;
+      font-family: inherit;
+      outline: none;
+      font-size: 14px;
+    }
+
+    button {
+      background: black;
+      color: #00ff00;
+      border: 1px solid #00ff00;
+      padding: 8px 12px;
+      font-family: inherit;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #003300;
+    }
+
+    @media (max-width: 600px) {
+      .msg {
+        max-width: 90%;
+        font-size: 13px;
+      }
+
+      header {
+        font-size: 12px;
+      }
+    }
+    #notifyBtn {
+      font-size: 12px;
+      padding: 4px 8px;
+      background: black;
+      color: #00ff00;
+      border: 1px solid #00ff00;
+      cursor: pointer;
+    }
+
+    #notifyBtn.on {
+      background: #003300;
+    }
+  </style>
+</head>
+<body>
+
+<header style="display:flex;justify-content:space-between;align-items:center;">
+  <div>💻 ANONYMOUS CHAT<span class="cursor">█</span></div>
+  <button id="notifyBtn">🔔 OFF</button>
+</header>
+
+<div id="pinScreen" style="padding:20px;text-align:center;">
+  <p>ENTER PIN</p>
+  <input id="pinInput" type="password" placeholder="****">
+  <button onclick="checkPin()">OK</button>
+</div>
+
+<div id="messages"></div>
+
+<footer>
+  <input id="msg" placeholder="type message..." />
+  <button onclick="send()">SEND</button>
+</footer>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script src="app.js"></script>
+
+</body>
+</html>
