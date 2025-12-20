@@ -1,4 +1,3 @@
-// ===== FIREBASE CONFIG =====
 firebase.initializeApp({
   apiKey: "AIzaSyDjxMdWwuntPGRvPgcbpWk9LjFpw25xcQc",
   authDomain: "web-app-d7b7a.firebaseapp.com",
@@ -11,19 +10,17 @@ firebase.initializeApp({
 const db = firebase.database();
 const messaging = firebase.messaging();
 
-// ===== USER =====
 const CHAT_PIN = "1337";
-let myId = localStorage.getItem("id") || Math.random().toString(36).slice(2);
+const myId = localStorage.getItem("id") || crypto.randomUUID();
 localStorage.setItem("id", myId);
 
-// ===== ELEMENTS =====
 const pinScreen = document.getElementById("pinScreen");
 const pinInput = document.getElementById("pinInput");
 const messages = document.getElementById("messages");
 const footer = document.querySelector("footer");
 const input = document.getElementById("msg");
 
-// ===== PIN =====
+// PIN
 function checkPin() {
   if (pinInput.value === CHAT_PIN) {
     pinScreen.style.display = "none";
@@ -35,7 +32,7 @@ function checkPin() {
   }
 }
 
-// ===== SEND =====
+// SEND
 function send() {
   if (!input.value) return;
   db.ref("chat").push({
@@ -46,30 +43,34 @@ function send() {
   input.value = "";
 }
 
-// ===== RECEIVE =====
+// RECEIVE
 function loadMessages() {
-  db.ref("chat").limitToLast(200).on("child_added", snap => {
+  db.ref("chat").limitToLast(100).on("child_added", snap => {
     const m = snap.val();
     const div = document.createElement("div");
-    div.className = "msg " + (m.sender === myId ? "me" : "other");
+    div.className = "msg " + (m.sender === myId ? "me" : "");
     div.textContent = m.text;
     messages.appendChild(div);
     messages.scrollTop = messages.scrollHeight;
   });
 }
 
-// ===== PUSH =====
+// PUSH
 document.getElementById("notifyBtn").onclick = async () => {
+  const perm = await Notification.requestPermission();
+  if (perm !== "granted") return alert("DENIED");
+
   const token = await messaging.getToken({
-    vapidKey: "ТВОЙ_VAPID_KEY"
+    vapidKey: "BOHK_fckIuE_cJKgqnw6F58oPvFEam199T4udSHNigT9mj5_1V0KfXTz4ohCinee-FLkvxqGlX2A3Bk_e03spBc"
   });
-  db.ref("tokens/" + myId).set(token);
+
+  await db.ref("tokens/" + myId).set(token);
   alert("PUSH ENABLED");
 };
 
+// FOREGROUND
 messaging.onMessage(payload => {
   new Notification(payload.notification.title, {
     body: payload.notification.body
   });
 });
-
