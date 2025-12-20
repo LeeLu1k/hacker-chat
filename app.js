@@ -10,67 +10,75 @@ firebase.initializeApp({
 const db = firebase.database();
 const messaging = firebase.messaging();
 
-const CHAT_PIN = "1337";
-const myId = localStorage.getItem("id") || crypto.randomUUID();
-localStorage.setItem("id", myId);
+const myId = localStorage.getItem("uid") || crypto.randomUUID();
+localStorage.setItem("uid", myId);
 
-const pinScreen = document.getElementById("pinScreen");
-const pinInput = document.getElementById("pinInput");
-const messages = document.getElementById("messages");
-const footer = document.querySelector("footer");
-const input = document.getElementById("msg");
+// LOGIN
+function login() {
+  const username = document.getElementById("username").value;
+  if (!username) return;
 
-// PIN
-function checkPin() {
-  if (pinInput.value === CHAT_PIN) {
-    pinScreen.style.display = "none";
-    messages.style.display = "flex";
-    footer.style.display = "flex";
-    loadMessages();
-  } else {
-    alert("WRONG PIN");
-  }
-}
+  localStorage.setItem("username", username);
 
-// SEND
-function send() {
-  if (!input.value) return;
-  db.ref("chat").push({
-    text: input.value,
-    sender: myId,
-    time: Date.now()
+  db.ref("users/" + myId).set({
+    username,
+    online: true
   });
-  input.value = "";
+
+  document.getElementById("login").style.display = "none";
+  document.getElementById("users").style.display = "block";
+
+  loadUsers();
 }
 
-// RECEIVE
-function loadMessages() {
-  db.ref("chat").limitToLast(100).on("child_added", snap => {
-    const m = snap.val();
-    const div = document.createElement("div");
-    div.className = "msg " + (m.sender === myId ? "me" : "");
-    div.textContent = m.text;
-    messages.appendChild(div);
-    messages.scrollTop = messages.scrollHeight;
+// USERS LIST
+function loadUsers() {
+  const list = document.getElementById("list");
+
+  db.ref("users").on("value", snap => {
+    list.innerHTML = "";
+    snap.forEach(s => {
+      if (s.key === myId) return;
+
+      const div = document.createElement("div");
+      div.className = "user";
+      div.textContent = s.val().username;
+      div.onclick = () => {
+        localStorage.setItem("chatWith", s.key);
+        location.href = "chat.html";
+      };
+      list.appendChild(div);
+    });
   });
 }
 
-// PUSH
-document.getElementById("notifyBtn").onclick = async () => {
-  const perm = await Notification.requestPermission();
-  if (perm !== "granted") return alert("DENIED");
+// CHAT
+const chatWith = localStorage.getItem("chatWith");
+if (chatWith) {
+  const chatId = [myId, chatWith].sort().join("_");
+  const msgBox = document.getElementById("messages");
 
-  const token = await messaging.getToken({
-    vapidKey: "BOHK_fckIuE_cJKgqnw6F58oPvFEam199T4udSHNigT9mj5_1V0KfXTz4ohCinee-FLkvxqGlX2A3Bk_e03spBc"
-  });
+  db.ref("chats/" + chatId + "/messages")
+    .limitToLast(100)
+    .on("child_added", snap => {
+      const m = snap.val();
+      const div = document.createElement("div");
+      div.className = "msg " + (m.from === myId ? "me" : "other");
+      div.textContent = m.text;
+      msgBox.appendChild(div);
+      msgBox.scrollTop = msgBox.scrollHeight;
+    });
 
-  await db.ref("tokens/" + myId).set(token);
-  alert("PUSH ENABLED");
-};
+  window.send = () => {
+    const input = document.getElementById("text");
+    if (!input.value) return;
 
-// FOREGROUND
-messaging.onMessage(payload => {
-  new Notification(payload.notification.title, {
-    body: payload.notification.body
-  });
-});
+    db.ref("chats/" + chatId + "/messages").push({
+      from: myId,
+      text: input.value,
+      time: Date.now()
+    });
+
+    input.value = "";
+  };
+}
