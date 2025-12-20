@@ -1,6 +1,6 @@
 // ===== FIREBASE CONFIG =====
 firebase.initializeApp({
-  apiKey: "ТВОЙ_API_KEY",
+  apiKey: "AIzaSyDjxMdWwuntPGRvPgcbpWk9LjFpw25xcQc",
   authDomain: "web-app-d7b7a.firebaseapp.com",
   databaseURL: "https://web-app-d7b7a-default-rtdb.firebaseio.com",
   projectId: "web-app-d7b7a",
@@ -72,3 +72,4 @@ messaging.onMessage(payload => {
     body: payload.notification.body
   });
 });
+
