@@ -3,6 +3,7 @@ importScripts("https://www.gstatic.com/firebasejs/9.23.0/firebase-messaging-comp
 
 firebase.initializeApp({
   apiKey: "AIzaSyDjxMdWwuntPGRvPgcbpWk9LjFpw25xcQc",
+  authDomain: "web-app-d7b7a.firebaseapp.com",
   projectId: "web-app-d7b7a",
   messagingSenderId: "781762321374",
   appId: "1:781762321374:web:6fb42bae922f378bd0db4f"
@@ -11,8 +12,11 @@ firebase.initializeApp({
 const messaging = firebase.messaging();
 
 messaging.onBackgroundMessage(payload => {
-  self.registration.showNotification("Anonymous Chat", {
-    body: payload.notification.body,
-    icon: "./icon.png"
-  });
+  self.registration.showNotification(
+    payload.notification.title,
+    {
+      body: payload.notification.body,
+      icon: "/icon.png"
+    }
+  );
 });
